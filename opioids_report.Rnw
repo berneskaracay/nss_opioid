@@ -1,0 +1,75 @@
+\documentclass[10pt]{article}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage[top=1cm, right=2cm, left=2cm, bottom=1.5cm]{geometry}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage{colortbl}
+\providecommand{\shadeRow}{\rowcolor[rgb]{0.529,0.808,0.922}}
+
+\date{}
+\begin{document}
+\vspace{1cm}
+
+
+
+
+<<echo=FALSE, results=hide>>=
+## fig 1 ##
+overdoses <- transform(overdoses, state_code=reorder(state_code, Deaths)) 
+pl<-ggplot(overdoses, aes(state_code, Deaths, fill=State,width=.7))+
+    scale_y_continuous(limits=c(0,max(overdoses$Deaths)),breaks=seq(0,max(overdoses$Deaths),500))+
+  geom_bar(stat="identity")+
+  theme(panel.grid.major = element_line(color = "grey"),text = element_text(size=6)
+  ,axis.text.x=element_text(angle=70,hjust=1,vjust=1,size=6))+
+  labs(y="DEATHS", x="STATE")+
+
+pdf(paste('overdose1', '.pdf', sep=''))
+pl
+dev.off()
+@
+
+
+
+<<echo=FALSE, results=tex>>=
+cat("\\clearpage",
+    "\\begin{figure}[!htbp]",
+    "\\begin{center}",
+    "\\includegraphics[scale=2.5]{", paste('overdose1', '.pdf', sep=''), "}",
+    "\\caption[Satisfaction]{Death In Each State}",
+    "\\end{center}",
+    "\\end{figure}", sep='')
+@
+
+
+\clearpage
+
+<<echo=FALSE, results=hide>>=
+## fig 2 ##
+
+
+overdoses <- transform(overdoses, state_code=reorder(state_code, death_percent)) 
+
+pl<-ggplot(overdoses, aes(state_code, death_percent, fill=State,width=.7))+
+    scale_y_continuous(limits=c(0,max(overdoses$death_percent)),labels = function(x) paste0(x, "%"))+
+  geom_bar(stat="identity")+
+  theme(panel.grid.major = element_line(color = "grey"),text = element_text(size=6)
+  ,axis.text.x=element_text(angle=70,hjust=1,vjust=1,size=6))+
+  labs(y="Deaths percent due to opioid", x="STATE")+
+
+pdf(paste('overdose2', '.pdf', sep=''))
+pl
+dev.off()
+@
+
+<<echo=FALSE, results=tex>>=
+cat("\\clearpage",
+    "\\begin{figure}[!htbp]",
+    "\\begin{center}",
+    "\\includegraphics[scale=2.5]{", paste('overdose2', '.pdf', sep=''), "}",
+    "\\caption[Satisfaction]{Death percent in each State}",
+    "\\end{center}",
+    "\\end{figure}", sep='')
+@
+
+\end{document}
