@@ -84,11 +84,11 @@ count_state_percent_group<-data_combined %>%filter(Opioid.Prescriber==1)%>% muta
 mysample <- data_combined[sample(1:nrow(data_combined), 50,
                           replace=FALSE),]
 
-Sweave("opioids_report.Rnw", output=paste0("DQ4", ".tex"))
+Sweave("opioids_report.Rnw", output=paste0("DQ5", ".tex"))
 
 
 
 for (q in 1:3) {
-  if (system(paste0("pdflatex -halt-on-error ", "DQ4", ".tex")) != 0L)
-    stop("Unable to compile latex document ", "DQ4", ".tex")
+  if (system(paste0("pdflatex -halt-on-error ", "DQ5", ".tex")) != 0L)
+    stop("Unable to compile latex document ", "DQ5", ".tex")
 }
