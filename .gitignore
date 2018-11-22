@@ -39,3 +39,4 @@ vignettes/*.pdf
 *.tex
 *.csv
 *.rda
+*.xlsx
