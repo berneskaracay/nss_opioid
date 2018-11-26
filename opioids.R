@@ -22,6 +22,7 @@ library(tidyverse)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library("xtable", lib.loc="~/R/win-library/3.4")
 
 ### read raw data sets ###
 
@@ -136,7 +137,8 @@ opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
 first_index<-min(which(opioids$passed_limit == 1))
 pareto_2013=first_index/nrow(opioids)*100
 
-top_10_opioids_prescriber_2013 <- opioids %>% 
+top_10_opioids_prescriber_2013 <- opioids  %>% 
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>% 
   top_n(n = 20, wt = Opioid.Claim.Count)
 
 names_2013<-c(top_10_opioids_prescriber_2013$NPI)
@@ -164,7 +166,8 @@ opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
 first_index<-min(which(opioids$passed_limit == 1))
 pareto_2014=first_index/nrow(opioids)*100
 
-top_10_opioids_prescriber_2014 <- opioids %>% 
+top_10_opioids_prescriber_2014 <- opioids  %>% 
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>%
   top_n(n = 20, wt = Opioid.Claim.Count)
 
 names_2014<-c(top_10_opioids_prescriber_2014$NPI)
@@ -191,8 +194,12 @@ opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
 first_index<-min(which(opioids$passed_limit == 1))
 pareto_2015=first_index/nrow(opioids)*100
 
-top_10_opioids_prescriber_2015 <- opioids %>% 
+top_10_opioids_prescriber_2015 <- opioids %>%
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count" ) %>% 
   top_n(n = 20, wt = Opioid.Claim.Count)
+
+
+
 
 names_2015<-c(top_10_opioids_prescriber_2015$NPI)
 
@@ -218,6 +225,7 @@ first_index<-min(which(opioids$passed_limit == 1))
 pareto_2016=first_index/nrow(opioids)*100
 
 top_10_opioids_prescriber_2016 <- opioids %>% 
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>%
   top_n(n = 20, wt = Opioid.Claim.Count)
 
 names_2016<-c(top_10_opioids_prescriber_2016$NPI)
@@ -266,11 +274,7 @@ ggplot(cms_combined, aes(x=year,
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.25))
 
 
-ggplot(cms_combined, aes(x=reorder(year),
-                                     y=Opioid.Claim.Count)) + 
-  geom_bar(stat = "identity") +
-  labs(x = "State", y = "Median Prescription Rate", title = "Median Opioid Prescription Rates",
-       subtitle = "2013 - 2016")
+
 
 
 

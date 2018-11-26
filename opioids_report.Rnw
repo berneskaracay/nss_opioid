@@ -29,6 +29,16 @@ pl
 dev.off()
 @
 
+<<echo=FALSE, results=tex>>=
+xtable(top_10_opioids_prescriber_2013[1:20, ], caption = "Top 20 prescriber of opioids in year 2013", label = "tab:mytable")
+
+xtable(top_10_opioids_prescriber_2014[1:20, ], caption = "Top 20 prescriber of opioids in year 2014", label = "tab:mytable")
+
+
+xtable(top_10_opioids_prescriber_2015[1:20, ], caption = "Top 20 prescriber of opioids in year 2015", label = "tab:mytable")
+
+xtable(top_10_opioids_prescriber_2016[1:20, ], caption = "Top 20 prescriber of opioids in year 2016", label = "tab:mytable")
+@
 
 \begin{landscape}
 <<echo=FALSE, results=tex>>=
@@ -133,6 +143,24 @@ dev.off()
 @
 
 
+<<echo=FALSE, results=hide>>=
+
+klm<-ggplot(cms_combined, aes(x=year,
+                         y=Opioid.Claim.Count)) + 
+  facet_wrap(~ `NPI`) +
+  geom_col() +
+  xlab("Year") +
+  ylab("Total Opioid claims") +
+  ggtitle("Prescribers in top 20 for every years between 2013 to 2016")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.25))
+
+pdf(paste('overdose5a', '.pdf', sep=''))
+klm
+dev.off()
+@
+
+cat("\\Large \\textbf{{", latexTranslate(pareto_2013), "}}\\\\\n")
+
 
 
 \begin{landscape}
@@ -150,6 +178,18 @@ cat("\\clearpage",
 
 
 
+\begin{landscape}
+<<echo=FALSE, results=tex>>=
+cat("\\clearpage",
+    "\\begin{figure}[!htbp]",
+    "\\begin{center}",
+    "\\includegraphics[height=17cm, width=23cm]{", paste('overdose5a', '.pdf', sep=''), "}",
+    "\\caption[Satisfaction]{Total opioid claims by State}",
+    "\\end{center}",
+    "\\end{figure}", sep='')
+@
+\end{landscape}
+\clearpage
 
 
 <<echo=FALSE, results=hide>>=
