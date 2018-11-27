@@ -5,12 +5,21 @@
 \usepackage{longtable}
 \usepackage{pdflscape}
 \usepackage{colortbl}
+\usepackage[section]{placeins}
 \providecommand{\shadeRow}{\rowcolor[rgb]{0.529,0.808,0.922}}
 
 \date{}
 \begin{document}
 \vspace{1cm}
 
+
+Top \Sexpr{round(pareto_2013, digits = 2)} percent of the prescribers provide 80$\%$ of the opioid in 2013 \\
+
+Top \Sexpr{round(pareto_2014, digits = 2)} percent of the prescribers provide 80$\%$ of the opioid in 2014 \\
+
+Top \Sexpr{round(pareto_2015, digits = 2)} percent of the prescribers provide 80$\%$ of the opioid in 2015 \\
+
+Top \Sexpr{round(pareto_2016, digits = 2)} percent of the prescribers provide 80$\%$ of the opioid in 2016 \\
 
 
 
@@ -39,6 +48,36 @@ xtable(top_10_opioids_prescriber_2015[1:20, ], caption = "Top 20 prescriber of o
 
 xtable(top_10_opioids_prescriber_2016[1:20, ], caption = "Top 20 prescriber of opioids in year 2016", label = "tab:mytable")
 @
+
+<<echo=FALSE, results=hide>>=
+
+klm<-ggplot(cms_combined, aes(x=year,
+                         y=Opioid.Claim.Count)) + 
+  facet_wrap(~ `NPI`) +
+  geom_col() +
+  xlab("Year") +
+  ylab("Total Opioid claims") +
+  ggtitle("Prescribers in top 20 for every years between 2013 to 2016")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.25))
+
+pdf(paste('overdose5a', '.pdf', sep=''))
+klm
+dev.off()
+@
+
+\begin{landscape}
+<<echo=FALSE, results=tex>>=
+cat("\\clearpage",
+    "\\begin{figure}[!htbp]",
+    "\\begin{center}",
+    "\\includegraphics[height=17cm, width=23cm]{", paste('overdose5a', '.pdf', sep=''), "}",
+    "\\caption[Satisfaction]{Total opioid claims by State}",
+    "\\end{center}",
+    "\\end{figure}", sep='')
+@
+\end{landscape}
+\clearpage
+
 
 \begin{landscape}
 <<echo=FALSE, results=tex>>=
@@ -143,23 +182,10 @@ dev.off()
 @
 
 
-<<echo=FALSE, results=hide>>=
 
-klm<-ggplot(cms_combined, aes(x=year,
-                         y=Opioid.Claim.Count)) + 
-  facet_wrap(~ `NPI`) +
-  geom_col() +
-  xlab("Year") +
-  ylab("Total Opioid claims") +
-  ggtitle("Prescribers in top 20 for every years between 2013 to 2016")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.25))
 
-pdf(paste('overdose5a', '.pdf', sep=''))
-klm
-dev.off()
-@
 
-cat("\\Large \\textbf{{", latexTranslate(pareto_2013), "}}\\\\\n")
+
 
 
 
@@ -177,19 +203,6 @@ cat("\\clearpage",
 \clearpage
 
 
-
-\begin{landscape}
-<<echo=FALSE, results=tex>>=
-cat("\\clearpage",
-    "\\begin{figure}[!htbp]",
-    "\\begin{center}",
-    "\\includegraphics[height=17cm, width=23cm]{", paste('overdose5a', '.pdf', sep=''), "}",
-    "\\caption[Satisfaction]{Total opioid claims by State}",
-    "\\end{center}",
-    "\\end{figure}", sep='')
-@
-\end{landscape}
-\clearpage
 
 
 <<echo=FALSE, results=hide>>=
