@@ -205,6 +205,8 @@ cat("\\clearpage",
 
 
 
+berness updated
+
 <<echo=FALSE, results=hide>>=
 ## fig 5 ##
 
@@ -239,6 +241,44 @@ cat("\\clearpage",
 @
 \end{landscape}
 \clearpage
+
+<<echo=FALSE>>=
+
+fit2 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+average_age, data = model_data)
+
+fit3 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+
+             white_other, data = model_data)
+
+fit4 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+
+             gdp_percap, data = model_data)
+
+fit5 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+average_age+white_other+
+             gdp_percap, data = model_data)
+
+fit5 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+average_age+white_other+
+             gdp_percap+male_female, data = model_data)
+
+sjt.lm(fit2,fit3,fit4,fit5,
+       remove.spaces = TRUE,
+       show.header = TRUE,
+       show.ci = FALSE,
+       p.numeric = FALSE, 
+       show.se = T,
+       digits.est = 3,
+       CSS = list(css.separatorcol = 'padding-right:3em; padding-left:3em;'),
+       string.est = "Estimate",
+       string.ci = "Conf. Int.",
+       string.p = "p-value",
+       string.dv = "Response",
+       string.pred = "Coefficients",
+       string.interc = "Constant",
+       group.pred = FALSE,
+              pred.labels = c("Opioid Prescription Rate","Average Age", "White Other Race Ratio", "GDP per capita","Male Female Ratio"),
+       depvar.labels = c("Crude Death Rate","Crude Death Rate","Crude Death Rate","Crude Death Rate"))
+
+@
+
+
 
 
 \end{document}

@@ -22,6 +22,24 @@ library(tidyverse)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(reshape2)
+
+library(Hmisc)
+library(rms)
+library(MASS)
+library(stargazer)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(labelled)
+library(foreign)
+library(tree)
+library(randomForest)
+library(ppcor)
+library(rms)
+library(plotly)
+require(gridExtra)
+library(readxl)
 library("xtable", lib.loc="~/R/win-library/3.4")
 
 ### read raw data sets ###
@@ -118,7 +136,7 @@ filter(pres_14,NPI==1518048750)
 
 #######2013##############
 opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2013.csv', stringsAsFactors=FALSE)
-
+opioids=subset(opioids,Opioid.Claim.Count>1)
 bernes<-opioids %>%
   dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
                    Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
@@ -138,7 +156,7 @@ first_index<-min(which(opioids$passed_limit == 1))
 pareto_2013=first_index/nrow(opioids)*100
 
 top_10_opioids_prescriber_2013 <- opioids  %>% 
-  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>% 
+  select("NPI","Specialty.Description","NPPES.Provider.State","Opioid.Claim.Count")%>% 
   top_n(n = 20, wt = Opioid.Claim.Count)
 
 names_2013<-c(top_10_opioids_prescriber_2013$NPI)
@@ -146,7 +164,7 @@ names_2013<-c(top_10_opioids_prescriber_2013$NPI)
 
 #######2014##############
 opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2014.csv', stringsAsFactors=FALSE)
-
+opioids=subset(opioids,Opioid.Claim.Count>1)
 
 bernes<-opioids %>%
   dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
@@ -174,8 +192,9 @@ names_2014<-c(top_10_opioids_prescriber_2014$NPI)
 
 
 #######2015##############
-opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2015.csv', stringsAsFactors=FALSE)
 
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2015.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids,Opioid.Claim.Count>1)
 bernes<-opioids %>%
   dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
                    Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
@@ -204,8 +223,9 @@ top_10_opioids_prescriber_2015 <- opioids %>%
 names_2015<-c(top_10_opioids_prescriber_2015$NPI)
 
 #######2016##############
-opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2016.csv', stringsAsFactors=FALSE)
 
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2016.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids,Opioid.Claim.Count>1)
 bernes<-opioids %>%
   dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
                    Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
@@ -274,7 +294,32 @@ ggplot(cms_combined, aes(x=year,
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.25))
 
 
+############# Death Model #########################3
 
+model=read.csv('data/davis.csv', stringsAsFactors=FALSE)
+gdp=read.csv('data/qgdpstate_all_R.csv', stringsAsFactors=FALSE)
+#us_states=read.csv('data/us_states.csv', stringsAsFactors=FALSE)
+
+gdp_long <- melt(gdp, id.vars = c("State", "Region", "ComponentName"))
+gdp_long$year<-as.numeric(str_sub(gdp_long$variable, start= 2))
+#long_combined <- merge(x=long, y=us_states, by.x='State',by.y='States', all.y=TRUE)
+
+model_data <- merge(x=gdp_long, y=model, by.x=c('State',"year"),by.y=c('State',"year"), all.y=TRUE)
+
+model_data<-model_data %>%
+  mutate(gdp_percap=value*1000000/Population)
+
+model_data<-model_data %>%
+  mutate(opioid_cost_percap=opioid_cost/Population)
+
+
+model_data<-model_data %>%
+  mutate(male_female=male/female)
+
+
+
+model_data<-model_data %>%
+  mutate(white_other=white/(black+asian+hispanic+native_indian+other_race))
 
 
 
