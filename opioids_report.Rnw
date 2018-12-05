@@ -24,36 +24,9 @@ Top \Sexpr{round(pareto_2016, digits = 2)} percent of the prescribers provide 80
 
 
 <<echo=FALSE, results=hide>>=
-## fig 1 ##
-overdoses <- transform(overdoses, state_code=reorder(state_code, Deaths)) 
-pl<-ggplot(overdoses, aes(state_code, Deaths, fill=State,width=.7))+
-    scale_y_continuous(limits=c(0,max(overdoses$Deaths)),breaks=seq(0,max(overdoses$Deaths),500))+
-  geom_bar(stat="identity")+
-  theme(panel.grid.major = element_line(color = "grey"),text = element_text(size=6)
-  ,axis.text.x=element_text(angle=70,hjust=1,vjust=1,size=6))+
-  labs(y="DEATHS", x="STATE")+
-
-pdf(paste('overdose1', '.pdf', sep=''))
-pl
-dev.off()
-@
-
-<<echo=FALSE, results=tex>>=
-xtable(top_10_opioids_prescriber_2013[1:20, ], caption = "Top 20 prescriber of opioids in year 2013", label = "tab:mytable")
-
-xtable(top_10_opioids_prescriber_2014[1:20, ], caption = "Top 20 prescriber of opioids in year 2014", label = "tab:mytable")
-
-
-xtable(top_10_opioids_prescriber_2015[1:20, ], caption = "Top 20 prescriber of opioids in year 2015", label = "tab:mytable")
-
-xtable(top_10_opioids_prescriber_2016[1:20, ], caption = "Top 20 prescriber of opioids in year 2016", label = "tab:mytable")
-@
-
-<<echo=FALSE, results=hide>>=
-
 klm<-ggplot(cms_combined, aes(x=year,
                          y=Opioid.Claim.Count)) + 
-  facet_wrap(~ `NPI`) +
+  facet_wrap(~ `id`) +
   geom_col() +
   xlab("Year") +
   ylab("Total Opioid claims") +
@@ -64,6 +37,7 @@ pdf(paste('overdose5a', '.pdf', sep=''))
 klm
 dev.off()
 @
+
 
 \begin{landscape}
 <<echo=FALSE, results=tex>>=
@@ -79,168 +53,7 @@ cat("\\clearpage",
 \clearpage
 
 
-\begin{landscape}
-<<echo=FALSE, results=tex>>=
-cat("\\clearpage",
-    "\\begin{figure}[!htbp]",
-    "\\begin{center}",
-    "\\includegraphics[height=15cm, width=20cm]{", paste('overdose1', '.pdf', sep=''), "}",
-    "\\caption[Satisfaction]{Death In Each State}",
-    "\\end{center}",
-    "\\end{figure}", sep='')
-@
-\end{landscape}
-\clearpage
 
-<<echo=FALSE, results=hide>>=
-## fig 2 ##
-
-
-overdoses <- transform(overdoses, state_code=reorder(state_code, death_percent)) 
-
-pl<-ggplot(overdoses, aes(state_code, death_percent, fill=State,width=.7))+
-    scale_y_continuous(limits=c(0,max(overdoses$death_percent)),labels = function(x) paste0(x, "%"))+
-  geom_bar(stat="identity")+
-  theme(panel.grid.major = element_line(color = "grey"),text = element_text(size=6)
-  ,axis.text.x=element_text(angle=80,hjust=1,vjust=1,size=6))+
-  labs(y="Deaths percent due to opioid", x="STATE")
-
-pdf(paste('overdose2', '.pdf', sep=''))
-pl
-dev.off()
-@
-
-
-\begin{landscape}
-<<echo=FALSE, results=tex>>=
-cat("\\clearpage",
-    "\\begin{figure}[!htbp]",
-    "\\begin{center}",
-    "\\includegraphics[height=15cm, width=20cm]{", paste('overdose2', '.pdf', sep=''), "}",
-    "\\caption[Satisfaction]{Death percent in each State}",
-    "\\end{center}",
-    "\\end{figure}", sep='')
-@
-\end{landscape}
-\clearpage
-
-
-<<echo=FALSE, results=hide>>=
-## fig 3 ##
-
-
-count_dr_group <- transform(count_dr_group, Specialty.Description=reorder(Specialty.Description, agg)) 
-count_dr_group
-
-pl<-ggplot(count_dr_group, aes(Specialty.Description, agg, width=0.7))+
-    scale_y_continuous(limits=c(0,max(count_dr_group$agg)),breaks=seq(0,max(count_dr_group$agg),50000))+
-  geom_bar(stat="identity")+
-  theme(panel.grid.major = element_line(color = "grey"),text = element_text(size=6)
-  ,axis.text.x=element_text(angle=70,hjust=1,vjust=1,size=6))+
-  labs(y="Opioid Claim Counts", x="Specialty")
-
-pdf(paste('overdose3', '.pdf', sep=''))
-pl
-dev.off()
-@
-
-
-
-
-\begin{landscape}
-<<echo=FALSE, results=tex>>=
-cat("\\clearpage",
-    "\\begin{figure}[!htbp]",
-    "\\begin{center}",
-    "\\includegraphics[height=17cm, width=23cm]{", paste('overdose3', '.pdf', sep=''), "}",
-    "\\caption[Satisfaction]{Total opioid claims by Specialty}",
-    "\\end{center}",
-    "\\end{figure}", sep='')
-@
-\end{landscape}
-\clearpage
-
-
-
-<<echo=FALSE, results=hide>>=
-## fig 4 ##
-
-
-count_state_group <- transform(count_state_group, State=reorder(State, agg)) 
-
-
-pl<-ggplot(count_state_group, aes(State, agg, width=0.7))+
-    scale_y_continuous(limits=c(0,max(count_state_group$agg)),breaks=seq(0,max(count_state_group$agg),50000))+
-  geom_bar(stat="identity")+
-  theme(panel.grid.major = element_line(color = "grey"),text = element_text(size=6)
-  ,axis.text.x=element_text(angle=70,hjust=1,vjust=1,size=6))+
-  labs(y="Opioid Claim Counts", x="State")
-
-pdf(paste('overdose4', '.pdf', sep=''))
-pl
-dev.off()
-@
-
-
-
-
-
-
-
-
-
-\begin{landscape}
-<<echo=FALSE, results=tex>>=
-cat("\\clearpage",
-    "\\begin{figure}[!htbp]",
-    "\\begin{center}",
-    "\\includegraphics[height=17cm, width=23cm]{", paste('overdose4', '.pdf', sep=''), "}",
-    "\\caption[Satisfaction]{Total opioid claims by State}",
-    "\\end{center}",
-    "\\end{figure}", sep='')
-@
-\end{landscape}
-\clearpage
-
-
-
-
-berness updated
-
-<<echo=FALSE, results=hide>>=
-## fig 5 ##
-
-
-count_state_percent_group <- transform(count_state_percent_group, State=reorder(State, agg)) 
-
-
-pl<-ggplot(count_state_percent_group, aes(State, agg, width=0.7))+
-    scale_y_continuous(limits=c(0,max(count_state_percent_group$agg)),breaks=seq(0,max(count_state_percent_group$agg),0.002))+
-  geom_bar(stat="identity")+
-  theme(panel.grid.major = element_line(color = "grey"),text = element_text(size=6)
-  ,axis.text.x=element_text(angle=70,hjust=1,vjust=1,size=6))+
-  labs(y="Opioid Claim per person", x="State")
-
-pdf(paste('overdose5', '.pdf', sep=''))
-pl
-dev.off()
-@
-
-
-
-
-\begin{landscape}
-<<echo=FALSE, results=tex>>=
-cat("\\clearpage",
-    "\\begin{figure}[!htbp]",
-    "\\begin{center}",
-    "\\includegraphics[height=17cm, width=23cm]{", paste('overdose5', '.pdf', sep=''), "}",
-    "\\caption[Satisfaction]{Opioid claims per person by State}",
-    "\\end{center}",
-    "\\end{figure}", sep='')
-@
-\end{landscape}
-\clearpage
 
 <<echo=FALSE>>=
 
@@ -255,10 +68,10 @@ fit4 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+
 fit5 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+average_age+white_other+
              gdp_percap, data = model_data)
 
-fit5 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+average_age+white_other+
+fit6 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+average_age+white_other+
              gdp_percap+male_female, data = model_data)
 
-sjt.lm(fit2,fit3,fit4,fit5,
+sjt.lm(fit2,fit3,fit4,fit5,fit6,
        remove.spaces = TRUE,
        show.header = TRUE,
        show.ci = FALSE,
