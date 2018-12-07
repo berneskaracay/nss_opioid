@@ -87,7 +87,7 @@ sjt.lm(fit2,fit3,fit4,fit5,fit6,
        string.interc = "Constant",
        group.pred = FALSE,
               pred.labels = c("Opioid Prescription Rate","Average Age", "White Other Race Ratio", "GDP per capita","Male Female Ratio"),
-       depvar.labels = c("Crude Death Rate","Crude Death Rate","Crude Death Rate","Crude Death Rate"))
+       depvar.labels = c("Crude Death Rate","Crude Death Rate","Crude Death Rate","Crude Death Rate","Crude Death Rate"))
 
 @
 

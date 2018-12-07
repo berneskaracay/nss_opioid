@@ -47,10 +47,12 @@ library("xtable", lib.loc="~/R/win-library/3.4")
 
 ################## Question 2 ################################
 
-
+prescriber=read.csv('data\\prescriber-info.csv', stringsAsFactors=FALSE)
+prescriber_list=c(prescriber$NPI)
 
 #######2013##############
 opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2013.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
 opioids=subset(opioids,Opioid.Claim.Count>1)
 bernes<-opioids %>%
   dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
@@ -59,6 +61,7 @@ bernes<-opioids %>%
 
 opioids$limit<-bernes$limit
 opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
 
 
 
@@ -79,6 +82,7 @@ names_2013<-c(top_10_opioids_prescriber_2013$NPI)
 
 #######2014##############
 opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2014.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
 opioids=subset(opioids,Opioid.Claim.Count>1)
 
 bernes<-opioids %>%
@@ -109,6 +113,7 @@ names_2014<-c(top_10_opioids_prescriber_2014$NPI)
 #######2015##############
 
 opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2015.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
 opioids=subset(opioids,Opioid.Claim.Count>1)
 bernes<-opioids %>%
   dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
@@ -121,6 +126,7 @@ opioids<-arrange(opioids, desc(Opioid.Claim.Count))
 
 
 opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids=subset(opioids, NPI %in% prescriber_list)
 opioids$passed_limit<-0
 opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
 
@@ -140,6 +146,7 @@ names_2015<-c(top_10_opioids_prescriber_2015$NPI)
 #######2016##############
 
 opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2016.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
 opioids=subset(opioids,Opioid.Claim.Count>1)
 bernes<-opioids %>%
   dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
@@ -227,7 +234,10 @@ model_data<-model_data %>%
 model_data<-model_data %>%
   mutate(white_other=white/(black+asian+hispanic+native_indian+other_race))
 
-cms_combined$id <- paste(cms_combined$NPPES.Provider.First.Name, cms_combined$NPPES.Provider.State, sep=" ")
+cms_combined<- cms_combined %>%
+  group_by(NPI) %>%  
+  mutate(id=paste(NPPES.Provider.First.Name,NPPES.Provider.State, sep="\n"))%>% 
+  ungroup()
 
 Sweave("opioids_report.Rnw", output=paste0("DQ5", ".tex"))
 
