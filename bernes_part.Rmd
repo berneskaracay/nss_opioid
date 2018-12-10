@@ -1,0 +1,352 @@
+---
+title: "bernes part"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+
+```{r library, include=FALSE}
+library(plyr)
+library(tidyverse)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(stargazer)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(labelled)
+library(readxl)
+```
+
+
+
+```{r q2 data, include=FALSE}
+
+prescriber=read.csv('data\\prescriber-info.csv', stringsAsFactors=FALSE)
+prescriber_list=c(prescriber$NPI)
+
+#######2013##############
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2013.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2013=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2013 <- opioids  %>% 
+  select("NPI","Specialty.Description","NPPES.Provider.State","Opioid.Claim.Count")%>% 
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+names_2013<-c(top_10_opioids_prescriber_2013$NPI)
+
+
+#######2014##############
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2014.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2014=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2014 <- opioids  %>% 
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>%
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+names_2014<-c(top_10_opioids_prescriber_2014$NPI)
+
+
+#######2015##############
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2015.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2015=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2015 <- opioids %>%
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count" ) %>% 
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+
+
+
+names_2015<-c(top_10_opioids_prescriber_2015$NPI)
+
+#######2016##############
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2016.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2016=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2016 <- opioids %>% 
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>%
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+names_2016<-c(top_10_opioids_prescriber_2016$NPI)
+
+
+top_dr<-Reduce(intersect, list(names_2013, names_2014,names_2015,names_2016))
+
+
+
+######################tOP PRESCRIBERS###########################
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2016.csv', stringsAsFactors=FALSE)
+
+top_2016<-subset(opioids,NPI  %in% top_dr)
+top_2016 <- top_2016 %>% 
+  mutate(year = 2016) 
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2015.csv', stringsAsFactors=FALSE)
+
+top_2015<-subset(opioids,NPI  %in% top_dr)
+top_2015 <- top_2015 %>% 
+  mutate(year = 2015) 
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2014.csv', stringsAsFactors=FALSE)
+
+top_2014<-subset(opioids,NPI  %in% top_dr)
+top_2014 <- top_2014 %>% 
+  mutate(year = 2014) 
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2013.csv', stringsAsFactors=FALSE)
+
+top_2013<-subset(opioids,NPI  %in% top_dr)
+top_2013 <- top_2013 %>% 
+  mutate(year = 2013) 
+
+cms_combined <- bind_rows(top_2013,top_2014,top_2015,top_2016)
+
+
+```
+
+
+
+
+
+```{r data model, include=FALSE}
+
+model=read.csv('data/davis.csv', stringsAsFactors=FALSE)
+gdp=read.csv('data/qgdpstate_all_R.csv', stringsAsFactors=FALSE)
+#us_states=read.csv('data/us_states.csv', stringsAsFactors=FALSE)
+
+gdp_long <- melt(gdp, id.vars = c("State", "Region", "ComponentName"))
+gdp_long$year<-as.numeric(str_sub(gdp_long$variable, start= 2))
+#long_combined <- merge(x=long, y=us_states, by.x='State',by.y='States', all.y=TRUE)
+
+model_data <- merge(x=gdp_long, y=model, by.x=c('State',"year"),by.y=c('State',"year"), all.y=TRUE)
+
+model_data<-model_data %>%
+  mutate(gdp_percap=value*1000000/Population)
+
+
+
+
+
+model_data<-model_data %>%
+  mutate(opioid_cost_percap=opioid_cost/Population)
+
+
+
+model_data<-model_data %>%
+  mutate(male_female=male/female)
+
+
+
+
+model_data<-model_data %>%
+  mutate(white_other=white/(black+asian+hispanic+native_indian+other_race))
+
+
+cms_combined_field<- cms_combined %>%filter(year==2013)%>%
+  mutate(id=paste(NPPES.Provider.First.Name,NPPES.Provider.Last.Name,NPPES.Provider.State,Specialty.Description, sep="\n"))%>% 
+  select(NPI,id)
+
+cms_combined <- merge(x=cms_combined, y=cms_combined_field, by.x=c("NPI"),by.y=c("NPI"), all.y=TRUE)
+
+```
+
+
+
+
+
+
+
+
+
+### Q2 Pareto: top 20 percent of the prescribers provide 80% of the opioid in 2013
+
+
+- Top **`r round(pareto_2013, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2013.
+
+- Top **`r round(pareto_2014, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2014.
+
+- Top **`r round(pareto_2015, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2015.
+
+- Top **`r round(pareto_2016, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2016.
+
+
+<div style="margin-bottom:100px;">
+</div>
+
+
+### Prescribers in top 20 for every years between 2013 to 2016
+
+```{r top 20, echo = FALSE, fig.height = 21, fig.width=20,fig.align="center"}
+
+ggplot(cms_combined, aes(x=year,
+                         y=Opioid.Claim.Count)) + 
+  facet_wrap(~ `id`) +
+  geom_col() +
+  xlab("Year") +
+  ylab("Total Opioid claims") +
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=18),strip.text = element_text(size = 20))
+
+```
+
+
+
+```{r regression, echo = FALSE}
+
+fit2 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+average_age, data = model_data)
+
+fit3 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+
+             white_other, data = model_data)
+
+fit4 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+
+             gdp_percap, data = model_data)
+
+fit5 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+average_age+white_other+
+             gdp_percap, data = model_data)
+
+fit6 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+average_age+white_other+
+             gdp_percap+male_female, data = model_data)
+```
+
+### Regression Outputs
+- Linear regression model use in all models.
+- We could not utilize mixed or fixed effect regression since we only have four years for each state.
+- Dependent variables is always crude death rate.
+
+```{r results1, echo = FALSE}
+
+sjt.lm(fit2,fit3,fit4,
+       remove.spaces = TRUE,
+       show.header = TRUE,
+       show.ci = FALSE,
+       p.numeric = FALSE, 
+       show.se = T,
+       digits.est = 3,
+       CSS = list(css.separatorcol = 'padding-right:3em; padding-left:3em;'),
+       string.est = "Estimate",
+       string.ci = "Conf. Int.",
+       string.p = "p-value",
+       string.dv = "Response",
+       string.pred = "Coefficients",
+       string.interc = "Constant",
+       group.pred = FALSE,
+              pred.labels = c("Opioid Prescription Rate","Average Age", "White Other Race Ratio", "GDP per capita","Male Female Ratio"),
+       depvar.labels = c("Crude Death Rate","Crude Death Rate","Crude Death Rate"))
+
+
+
+```
+
+
+<div style="margin-bottom:100px;">
+</div>
+
+
+```{r results2, echo = FALSE}
+
+sjt.lm(fit5,fit6,
+       remove.spaces = TRUE,
+       show.header = TRUE,
+       show.ci = FALSE,
+       p.numeric = FALSE, 
+       show.se = T,
+       digits.est = 3,
+       CSS = list(css.separatorcol = 'padding-right:3em; padding-left:3em;'),
+       string.est = "Estimate",
+       string.ci = "Conf. Int.",
+       string.p = "p-value",
+       string.dv = "Response",
+       string.pred = "Coefficients",
+       string.interc = "Constant",
+       group.pred = FALSE,
+              pred.labels = c("Opioid Prescription Rate","Average Age", "White Other Race Ratio", "GDP per capita","Male Female Ratio"),
+       depvar.labels = c("Crude Death Rate","Crude Death Rate"))
+
+
+
+```
