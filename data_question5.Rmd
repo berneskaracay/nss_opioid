@@ -1,0 +1,869 @@
+---
+title: "Opioid Usage"
+author: "Bernes Karacay, Binu Thomas, Davis Thrailkill"
+date: "December 11, 2018"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r libraries, include=FALSE}
+library(plyr)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(maps)
+library(ggthemes)
+library(mapproj)
+library(gridExtra)
+library(reshape2)
+library(stargazer)
+#library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(labelled)
+library(readxl)
+```
+
+## Overdoses
+
+- Used the dataset **NCHS - Drug Poisoning Mortality by State: United States** from data.cms.gov
+- Gives data per State & Year (1999-2016), which includes: the number of Deaths, Population (in 100,000), Crude Death Rate
+- The data is not specific to opioid usage.
+
+
+
+```{r overdose data, warning=FALSE, include=FALSE}
+# Read in Drug Overdose Data
+overdoses <- read_csv('data/NCHS_-_Drug_Poisoning_Mortality_by_State__United_States.csv')
+overdoses <- overdoses %>% 
+  subset(State != "United States") %>% 
+  select(State, Year,Deaths,Population,`Crude Death Rate`, `US Crude Rate`)  
+```
+
+
+```{r overdoses wide, include=FALSE}
+### Making overdose df wide for plotting purposes.
+overdoses_wide <- overdoses %>% 
+  select(State,Year,`Crude Death Rate`) %>% 
+  spread(Year,`Crude Death Rate`) %>% 
+  mutate(Change_13to16 = `2016` - `2013`) %>% 
+  mutate(Change_99to16 = `2016` - `1999`) %>% 
+  arrange(desc(Change_13to16))
+overdoses_top13_16 <- overdoses_wide %>% top_n(n = 6, wt = Change_13to16)
+```
+### Drug Overdose Mortality by State
+#### Rate Change from 2013 to 2016
+The states are ordered based on the 2013 death rate. The states with the greatest rate of change in the four year timespan are in bold. 
+
+```{r overdoses cleveland dot plot1, echo=FALSE,fig.height = 13.5, fig.width=16,fig.align="center"}
+ggplot() +
+  geom_segment(data=overdoses_wide, aes(x=reorder(State,`2013`), xend=State, y=`2013`, yend=`2016`), color="gray60",size=1) +
+  geom_segment(data=overdoses_top13_16, aes(x=reorder(State,`2013`), xend=State, y=`2013`, yend=`2016`), color="gray50",size=1.5) +
+  geom_point(data=overdoses_wide, aes(x=reorder(State,`2013`), y=`2013`), color="mediumseagreen", size=4.5,alpha=0.7 ) +
+  geom_point(data=overdoses_wide, aes(x=reorder(State,`2013`), y=`2016`), color="tomato", size=4.5,alpha=0.7 ) +
+  scale_x_discrete(labels=c(  "West Virginia"=expression(bold("West Virginia"))
+                              , "District of Columbia"=expression(bold("District of Columbia"))
+                              , "Maryland"=expression(bold("Maryland"))
+                              , "Pennsylvania"=expression(bold("Pennsylvania"))
+                              , "Ohio"=expression(bold("Ohio"))
+                              , "New Hampshire"=expression(bold("New Hampshire")), parse=TRUE)) +
+  coord_flip()+
+  theme_light() +
+  xlab("State") +
+  ylab("Death Rate (per 100,000 population)")+
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=18)) +
+  #  ggtitle("Drug Overdose Mortality by State", subtitle = "Rate Change from 2013 to 2016") +
+  ylim(0,50)
+###  Top 5 greatest change from 2013 to 2016: (1)DC,(2)NH,(3)MD,(4)WV,(5)PA, (6)OH
+```
+
+### Drug Overdose Mortality by State
+#### Rate Change from 1999 to 2016
+When we expand the plot to include the data from 1999, we can see the drastic change in 17 years. Note that the same states, aside from Maryland still show the greatest change.
+
+```{r overdoses cleveland dot plot2, echo=FALSE,fig.height = 13.5, fig.width=16,fig.align="center"}
+### Cleveland Dot Plot: Expanding to look at change in full dataset, so from 1999
+ggplot() +
+  geom_segment(data=overdoses_wide, aes(x=reorder(State,`2013`), xend=State, y=`2013`, yend=`2016`), color="gray60",size=1.25) +
+  geom_segment(data=overdoses_top13_16, aes(x=reorder(State,`2013`), xend=State, y=`2013`, yend=`2016`), color="gray50",size=1.5) +
+  geom_segment(data=overdoses_wide, aes(x=reorder(State,`2013`), xend=State, y=`1999`, yend=`2013`), color="lightblue3",size=1) +
+  geom_segment(data=overdoses_top13_16, aes(x=reorder(State,`2013`), xend=State, y=`1999`, yend=`2013`), color="lightblue4",size=1.5) +
+  geom_point(data=overdoses_wide, aes(x=reorder(State,`2013`), y=`1999`), color="gray40", size=4.5,alpha=0.7 ) +
+  geom_point(data=overdoses_wide, aes(x=reorder(State,`2013`), y=`2013`), color="mediumseagreen", size=4.5,alpha=0.7 ) +
+  geom_point(data=overdoses_wide, aes(x=reorder(State,`2013`), y=`2016`), color="tomato", size=4.5,alpha=0.7 ) +
+  scale_x_discrete(labels=c(  "West Virginia"=expression(bold("West Virginia"))
+                              , "District of Columbia"=expression(bold("District of Columbia"))
+                              , "Maryland"=expression(bold("Maryland"))
+                              , "Pennsylvania"=expression(bold("Pennsylvania"))
+                              , "Ohio"=expression(bold("Ohio"))
+                              , "New Hampshire"=expression(bold("New Hampshire")), parse=TRUE)) +
+  coord_flip()+
+  theme_light() +
+  xlab("State") +
+  ylab("Death Rate (per 100,000 population)") +
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=18)) +
+  #  ggtitle("Drug Overdose Mortality by State", subtitle = "Rate Change from 1999 to 2016") +
+  ylim(0,50)
+###  Top 5 greatest change from 1999 to 2016: (1)WV,(2)OH,(3)NH,(4)DC,(5)PA
+```
+
+## Opioid Usage
+- Used the dataset **Part D Prescriber State Summary Report**, CY2013-16 from data.cms.gov
+- Gives data per State and Drug (& Generic) Name, including: the number of Prescribers, number of Claims, Opioid Drug Flag
+
+```{r state prescription data, include=FALSE}
+# read in files
+state_list <- unique(c(overdoses$State))
+cms_drug_summary_2013 <- read_csv('data/Part_D_Prescriber_State_Summary_Report__Calendar_Year_2013.csv') %>% 
+  subset(`State Name` %in% state_list) %>% 
+  mutate(year=2013)
+cms_drug_summary_2014 <- read_csv('data/Part_D_Prescriber_State_Summary_Report__Calendar_Year_2014.csv') %>% 
+  subset(`State Name` %in% state_list) %>% 
+  mutate(year=2014)
+cms_drug_summary_2015 <- read_csv('data/Part_D_Prescriber_State_Summary_Report__Calendar_Year_2015.csv') %>% 
+  subset(`State Name` %in% state_list) %>% 
+  mutate(year=2015)
+cms_drug_summary_2016 <- read_csv('data/Part_D_Prescriber_State_Summary_Report__Calendar_Year_2016.csv') %>% 
+  subset(`State Name` %in% state_list) %>% 
+  mutate(year=2016)
+# bind all dataframes together to one combined dataframe
+cms_drug_summary_combined <- bind_rows(cms_drug_summary_2013, cms_drug_summary_2014,cms_drug_summary_2015,cms_drug_summary_2016) %>%
+  select(State = `State Name`,`Generic Name`,`Number of Prescribers`,`Number of Medicare Part D Claims`,`Opioid Drug Flag`,year) 
+cms_drug_summary_subset <- cms_drug_summary_combined %>% 
+  subset(`Opioid Drug Flag`=='Y') %>% 
+  dplyr::group_by(State,`Generic Name`,year) %>%
+  dplyr::summarize(Num_Prescribers = sum(`Number of Prescribers`,na.rm=TRUE),
+                   Num_Prescriptions = sum(`Number of Medicare Part D Claims`,na.rm=TRUE)) %>% 
+  mutate(Opioid_Rx_Rate = 100*(Num_Prescriptions/sum(Num_Prescriptions)))
+cms_drug_summary_subset$year <- factor(cms_drug_summary_subset$year)  
+# Find number of opioid types per state
+opioid_types <- cms_drug_summary_subset %>% 
+  select(State, `Generic Name`,year) %>% 
+  dplyr::group_by(State,year) %>% 
+  tally() 
+```
+### Number of Opioid Types (by Generic Name) Prescribed in each State
+```{r opioid type, echo=FALSE,fig.height=12,fig.width=14}
+ggplot(opioid_types, aes(x=year, y=n)) +
+  geom_boxplot(aes(group=year)) +
+  geom_point(position=position_jitter(width = 0.2), alpha = 0.6,aes(color=year,size=4),show.legend=FALSE) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Count of Opioid Types") +
+  #  ggtitle("Number of Opioid Types (by Generic Name) Prescribed in each State ") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.25)) 
+```
+```{r top opioids, include=FALSE}
+########### TOP 5 OPIOIDS PRESCRIBED OVERALL IN 2016 ##########
+top_5_opioids_used_2016 <- subset(cms_drug_summary_2016,`Opioid Drug Flag` %in% c('Y')) %>%
+  select(`State Name`,`Generic Name`,`Number of Prescribers`,`Number of Medicare Part D Claims`) %>%
+  dplyr::group_by(`Generic Name`) %>%
+  dplyr::summarize(Num_Prescribers = sum(`Number of Prescribers`,na.rm=TRUE),
+                   Num_Prescriptions = sum(`Number of Medicare Part D Claims`,na.rm=TRUE)) %>% 
+  mutate(Opioid_Rx_Rate = 100*(Num_Prescriptions/sum(Num_Prescriptions))) %>% 
+  top_n(n = 7, wt = Opioid_Rx_Rate)
+top_5_opioids_used_2016_list <- c(top_5_opioids_used_2016$`Generic Name`)
+########### TOP 5 STATES BY OVERDOSE IN 2016 ##########
+top_5_states_OD <- overdoses_wide %>% 
+  top_n(n=5,wt=`2016`)
+top_5_OD_state_list_2016 <- c(top_5_states_OD$State)
+####### SUBSET BY TOP 5 OPIOIDS USED &  TOP 5 OVERDOSE STATES IN 2016 ########
+top_5_opioids_in_top_5_OD_states_2016 <- subset(subset(cms_drug_summary_subset,`Generic Name` %in% top_5_opioids_used_2016_list), State %in% top_5_OD_state_list_2016)
+top_5_opioids_in_top_5_OD_states_2016[top_5_opioids_in_top_5_OD_states_2016=='ACETAMINOPHEN WITH CODEINE']  <- 'Acetaminophen with Codeine'
+top_5_opioids_in_top_5_OD_states_2016[top_5_opioids_in_top_5_OD_states_2016=='FENTANYL']  <- 'Fentanyl'
+top_5_opioids_in_top_5_OD_states_2016[top_5_opioids_in_top_5_OD_states_2016=='HYDROCODONE/ACETAMINOPHEN']  <- 'Hydrocodone/Acetaminophen'
+top_5_opioids_in_top_5_OD_states_2016[top_5_opioids_in_top_5_OD_states_2016=='MORPHINE SULFATE']  <- 'Morphine Sulfate'
+top_5_opioids_in_top_5_OD_states_2016[top_5_opioids_in_top_5_OD_states_2016=='OXYCODONE HCL']  <- 'Oxycodone HCL'
+top_5_opioids_in_top_5_OD_states_2016[top_5_opioids_in_top_5_OD_states_2016=='OXYCODONE HCL/ACETAMINOPHEN']  <- 'Oxycodone HCL/Acetaminophen'
+top_5_opioids_in_top_5_OD_states_2016[top_5_opioids_in_top_5_OD_states_2016=='TRAMADOL HCL']  <- 'Tramadol HCL'
+```
+### Opioid Usage
+#### Most Prescribed Opioids in 2016
+
+We chose to specifically look at the top seven opioids prescribed (as a percentage of all opioids prescribed) for five states with the highest overdose death rates in 2016 and to see how that data trended starting in 2013.
+
+``` {r top opioids facet, echo=FALSE,fig.height=12,fig.width=14}
+##### FACET WRAP PLOT
+ggplot(top_5_opioids_in_top_5_OD_states_2016, aes(x=reorder(`Generic Name`, -Opioid_Rx_Rate), y=Opioid_Rx_Rate)) +
+  facet_grid(year ~ State) +
+  geom_col(aes(fill=`Generic Name`)) +
+  xlab("Generic Drug Name") +
+  ylab("Pct of Total Opioid Prescriptions") +
+#  ggtitle("Most Prescribed Opioids", subtitle = "For Top 5 States by Drug Overdose Rate & Top 5 Prescribed Opioids in 2016") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.25)) +
+  ylim(0,32)
+```
+
+## Opioid Usage: Prescriber Level
+- In place of the "Prescriber Info" data, used the dataset **Medicare Provider Utilization and Payment Data: Part D Prescriber Summary Table** for CY2013-16 from data.cms.gov
+- Gives the following data for each NPI:
++ State, Specialty, Total Claim Count, Opioid Claim Count, Opioid Prescriber Rate, Opioid Day Supply, Average Age of Beneficiaries, Beneficiary Gender, Beneficiary Race, Beneficiary Avg Risk Score
+- Subset this based on NPIs in original 'Presiber Info" dataset
+
+
+```{r read_data, include=FALSE}
+opioids <- read_csv("data/opioids.csv")
+prescribers <- read_csv("data/prescriber-info.csv")
+overdoses_orig <- read_csv("data/overdoses.csv")
+cms14 <- read_csv("data/Medicare_Provider_Utilization_and_Payment_Data__Part_D_Prescriber_Summary_Table_CY2014.csv")
+cms13 <- read_csv("data/Medicare_Provider_Utilization_and_Payment_Data__Part_D_Prescriber_Summary_Table_CY2013.csv")
+cms15 <- read_csv("data/Medicare_Provider_Utilization_and_Payment_Data__Part_D_Prescriber_Summary_Table_CY2015.csv")
+cms16 <- read_csv("data/Medicare_Provider_Utilization_and_Payment_Data__Part_D_Prescriber_Summary_Table_CY2016.csv")
+```
+
+```{r setting_up, include=FALSE}
+not_states <- list('AA','GU','AE','ZZ')
+prescribers <- prescribers[!(prescribers$State %in% not_states), ]
+#filter for only opioid prescribers and group by state to get a count
+state_counts <- prescribers %>%
+  filter(Opioid.Prescriber == 1) %>%
+  dplyr::group_by(State) %>% 
+  dplyr::summarise(count_npi = n_distinct(NPI)) %>% 
+  arrange(desc(count_npi))
+# create a list of NPIs from original dataset to subset each dataframe by
+npi_list = c(prescribers$NPI)
+cms13 <- cms13 %>% 
+  mutate(year = 2013)
+cms14 <- cms14 %>% 
+  mutate(year = 2014)
+cms15 <- cms15 %>% 
+  mutate(year = 2015)
+cms16 <- cms16 %>% 
+  mutate(year = 2016)
+# bind all dataframes together to one combined dataframe
+cms_combined <- bind_rows(cms13,cms14,cms15,cms16)
+# remove unnecessary state codes (AA, GU, AE, ZZ)
+cms_combined <- cms_combined[!(cms_combined$nppes_provider_state %in% not_states), ]
+# change orthopaedic to orthopedic
+cms_combined$specialty_description <- gsub("Orthopaedic Surgery", "Orthopedic Surgery",
+                                           cms_combined$specialty_description)
+cms_combined$specialty_description <- gsub("Certified Registered Nurse Anesthetist (CRNA)",
+                                           "CRNA", cms_combined$specialty_description)
+cms_providers <- cms_combined %>% 
+  filter(npi %in% npi_list)
+cms_providers <- cms_providers %>% 
+  filter(specialty_description != "Behavioral Analyst")
+cms_opioid_providers <- cms_providers %>%
+  filter(!is.na(opioid_claim_count))
+cms_opioid_providers <- cms_providers %>% 
+  filter(opioid_claim_count != 0)
+# list of NPIs used in our analysis
+providers_list <- c(cms_opioid_providers$npi)
+# specialties dataframe
+specialties_totals <- cms_opioid_providers %>% 
+  dplyr::group_by(specialty_description) %>% 
+  dplyr::summarize(opioid_claims = sum(opioid_claim_count, na.rm = TRUE),
+            total_claims = sum(total_claim_count, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  dplyr::select(specialty_description, opioid_claims, total_claims)
+# create a new column for prescription rate
+specialties_totals <- specialties_totals %>% 
+  mutate(opioid_prescription_rate = (opioid_claims/total_claims)*100)
+# top 5 specialties by opioid claims, regardless of prescription rate
+top5_specs_counts_list <- list("Family Practice", "Internal Medicine", "Nurse Practitioner",
+                          "Physician Assistant", "Orthopedic Surgery")
+# top 5 specialties by rate, with den > 10,000,000 total claims
+top5_specs_rates_list <- list("Pain Management", "Anesthesiology",
+                         "Interventional Pain Management", "Physical Medicine and Rehabilitation", 
+                         "Orthopedic Surgery")
+# filter specialties_totals by top 5 by claims
+top5_specs_counts <- specialties_totals %>% 
+  filter(specialty_description %in% top5_specs_counts_list)
+# create a new column to divide opioid claims by a million for plotting
+top5_specs_counts_millions <- top5_specs_counts %>%
+  mutate(opioid_claim_count = opioid_claims/1000000)
+# filter specialties_totals by top 5 by rates
+top5_specs_rates <- specialties_totals %>% 
+  filter(specialty_description %in% top5_specs_rates_list)
+```
+
+```{r map_dataframe, include=FALSE}
+# counts by state, by year
+cms_state_providers <- cms_providers %>% 
+  dplyr::group_by(nppes_provider_state, year) %>% 
+  dplyr::summarize(count_npi = n_distinct(npi),
+                   total_beneficiaries = sum(bene_count, na.rm = TRUE),
+                   total_claims = sum(total_claim_count, na.rm = TRUE),
+                   opioid_beneficiaries = sum(opioid_bene_count, na.rm = TRUE),
+                   opioid_claims = sum(opioid_claim_count, na.rm = TRUE),
+                   drug_supply = sum(total_day_supply, na.rm = TRUE),
+                   drug_cost = sum(total_drug_cost, na.rm = TRUE),
+                   opioid_supply = sum(opioid_day_supply, na.rm = TRUE),
+                   opioid_cost = sum(opioid_drug_cost, na.rm = TRUE),
+                   total_30_day_fills = sum(total_30_day_fill_count, na.rm = TRUE),
+                   female = sum(beneficiary_female_count, na.rm = TRUE),
+                   male = sum(beneficiary_male_count, na.rm = TRUE),
+                   white = sum(beneficiary_race_white_count, na.rm = TRUE),
+                   black = sum(beneficiary_race_black_count, na.rm = TRUE),
+                   asian = sum(beneficiary_race_asian_pi_count, na.rm = TRUE),
+                   hispanic = sum(beneficiary_race_hispanic_count, na.rm = TRUE),
+                   native_indian = sum(beneficiary_race_nat_ind_count, na.rm = TRUE),
+                   other_race = sum(beneficiary_race_other_count, na.rm = TRUE),
+                   average_age = mean(average_age_of_beneficiaries, na.rm = TRUE)) %>% 
+  ungroup() 
+cms_state_providers <- cms_state_providers %>% 
+  mutate(opioid_prescription_rate = (opioid_claims/total_claims)*100)
+# create a state lookup dataframe
+state_lookup <- overdoses_orig %>%
+  dplyr::select(State, Abbrev)
+cms_state_providers <- cms_state_providers %>% 
+  inner_join(state_lookup, by = c("nppes_provider_state" = "Abbrev"))
+```
+
+```{r map_ready, include=FALSE}
+united_states_map <- map_data("state")
+cms_state_providers$State <- tolower(cms_state_providers$State)
+prescription_rate_map <- inner_join(united_states_map, cms_state_providers, by = c("region" = "State"))
+map0 <- ggplot(prescription_rate_map, aes(x = long, y = lat, group = group,
+                                          fill = opioid_prescription_rate))
+map1 <- map0 + geom_polygon(color = "gray90", size = 0.05) +
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45)
+map2 <- map1 + scale_fill_viridis_c(option = "plasma", direction = -1)
+```
+
+<div style="margin-bottom:100px;">
+</div>
+### Opioid Prescription Rate per State
+#### 2013-2016
+
+Across the country, physicians prescribed opioids at lower rates in 2016 than they did in 2013. During the same timespan, overdoses due to opioid abuse increased rapidly. We decided to examine if specialty had an effect on prescribing habits.
+```{r render_map, echo=FALSE, fig.height=8, fig.width=8, fig.align="center"}
+# map the opioid prescription rate over time by state
+map2 + theme_map() + facet_wrap(~ year, ncol = 2) +
+  theme(legend.position = "bottom",
+        strip.background = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  labs(fill = "Opioid Prescription Rate")
+```
+
+<div style="margin-bottom:100px;">
+</div>
+### Total Opioid Claims by Specialty
+#### Nationally, 2013-2016
+
+Family Practice, Internal Medicine, Nurse Practitioner, Physician Assistant, and Orthopedic Surgery are the top five specialties by total opioid claims.
+```{r top_5_claims, echo = FALSE, fig.height=6, fig.width=6, fig.align="center"}
+ggplot(top5_specs_counts_millions, aes(x=reorder(specialty_description, -opioid_claim_count),
+                                       y=opioid_claim_count)) +
+  geom_bar(stat = "identity") +
+  labs(y="Opioid Claims (Millions)") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1),
+        axis.title.x = element_blank())
+```
+
+```{r box_plot_data, include=FALSE}
+# create a dataframe of specialties over time
+specialties_yearly <- cms_opioid_providers %>% 
+  dplyr::group_by(specialty_description, year) %>% 
+  dplyr::summarize(opioid_claims = sum(opioid_claim_count, na.rm = TRUE),
+            total_claims = sum(total_claim_count, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  dplyr::select(specialty_description, year, opioid_claims, total_claims)
+specialties_yearly <- specialties_yearly %>% 
+  mutate(opioid_prescription_rate = (opioid_claims/total_claims)*100)
+top5_specs_year <- specialties_yearly %>% 
+  filter(specialty_description %in% top5_specs_rates_list)
+top5_specs_year <- top5_specs_year %>% 
+  mutate(opioid_claims = opioid_claims/1000000,
+         total_claims = total_claims/1000000)
+top5_counts_year <- specialties_yearly %>% 
+  filter(specialty_description %in% top5_specs_counts_list)
+top5_counts_year <- top5_counts_year %>% 
+  mutate(opioid_claims = opioid_claims/1000000,
+         total_claims = total_claims/1000000)
+top5_specs_box_data <- cms_opioid_providers %>% 
+  filter(specialty_description %in% top5_specs_rates_list)
+top5_counts_box_data <- cms_opioid_providers %>% 
+  filter(specialty_description %in% top5_specs_counts_list)
+```
+
+<div style="margin-bottom:100px;">
+</div>
+### Opioid Prescription Rate by Specialty per Year
+#### Nationally, 2013-2016
+
+The range of prescription rates across specialties with high claim counts did not vary much from 2013 to 2016, although the total prescription rate for each specialty decreased over time.
+```{r specialty_boxplot_a, echo=FALSE, fig.height=6, fig.width=10, fig.align="center"}
+ggplot(top5_counts_box_data, aes(x=reorder(specialty_description, -opioid_prescriber_rate),
+                                 y=opioid_prescriber_rate,
+                                 fill=specialty_description)) +
+  facet_wrap(ncol = 2, ~year) +
+  geom_boxplot() +
+  theme_bw() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_fill_discrete(name = "Specialty", breaks = c("Orthopedic Surgery",
+                                                     "Physician Assistant", 
+                                                      "Nurse Practitioner",
+                                                      "Family Practice", 
+                                                      "Internal Medicine")) +
+  labs(y="Opioid Prescription Rate")
+```
+
+<div style="margin-bottom:100px;">
+</div>
+### Opioid Prescriptions by Specialty
+#### Nationally, 2013-2016
+
+The grid below shoes the total opioid claims and the prescription rates per year for the top five specialties in terms of opioid claims.
+
+Although there are a lot of opioid claims attributed to each of these specialties, the prescription rates are low.
+```{r specialties_lineplots_a, include=FALSE}
+# line plot of opioid prescription counts by specialty for top 5 in opioid claims
+line_counts_a <- ggplot(top5_counts_year, aes(x=year, y=opioid_claims, color = specialty_description)) +
+  geom_line() +
+  theme_bw() +
+  theme(axis.title.x = element_blank()) +
+  scale_color_discrete(name = "Specialty", breaks = c("Family Practice", "Internal Medicine", 
+                                                      "Nurse Practitioner",
+                                                      "Physician Assistant", 
+                                                      "Orthopedic Surgery")) +
+  labs(y="Opioid Claims (Millions)", title="Number of Opioid Claims")
+# line plot of opioid prescription rate by specialty for top 5 in opioid claims
+prescription_rates_a <- ggplot(top5_counts_year, aes(x=year, y=opioid_prescription_rate, color = specialty_description)) +
+  geom_line() +
+  theme_bw() +
+  scale_color_discrete(name = "Specialty", breaks = c("Orthopedic Surgery",
+                                                      "Physician Assistant", 
+                                                      "Nurse Practitioner",
+                                                      "Family Practice", 
+                                                      "Internal Medicine")) +
+  labs(x="Year", y="Prescription Rate", title="Opioid Prescription Rate")
+```
+
+```{r specialties_grid_a, echo=FALSE, fig.height=6, fig.width=10, fig.align="center"}
+# plot both "A" plots together
+grid.arrange(line_counts_a, prescription_rates_a, nrow = 2)
+```
+
+
+<div style="margin-bottom:50px;">
+</div>
+### Opioid Prescription Rate by Specialty
+#### Nationally, 2013-2016
+
+Pain Management, Anesthesiology, Interventional Pain Management, Physical Medicine and Rehabilitation, and Orthopedic Surgery are the top five specialties by opioid prescription rate, defined as the ratio of opioid claims to total claims.
+```{r top_5_rates, echo=FALSE, fig.height=6, fig.width=6, fig.align="center"}
+ggplot(top5_specs_rates, aes(x=reorder(specialty_description, -opioid_prescription_rate),
+                             y=opioid_prescription_rate)) +
+  geom_bar(stat = "identity") +
+  labs(y="Opioid Prescription Rate") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1),
+        axis.title.x = element_blank())
+```
+
+
+<div style="margin-bottom:100px;">
+</div>
+### Opioid Prescription Rate by Specialty per Year
+#### Nationally, 2013-2016
+
+In general, we know that physicians prescribed fewer opioids in 2016 than they did in 2013. However, the total prescription rate for four of the below specialties was actually higher in 2016 than in 2013.
+
+Here, each dot represents a physician and is colored by specialty.
+```{r specialty_boxplot_b, echo=FALSE, fig.height=6, fig.width=10, fig.align="center"}
+ggplot(top5_specs_box_data, aes(x=reorder(specialty_description, -opioid_prescriber_rate),
+                            y=opioid_prescriber_rate)) +
+  facet_wrap(ncol = 2, ~year) +
+  geom_boxplot() +
+  geom_point(aes(color = specialty_description),
+             position=position_jitter(width = 0.2), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_color_discrete(name = "Specialty", breaks = c("Pain Management",
+                                                      "Anesthesiology",
+                                                      "Interventional Pain Management", 
+                                                      "Orthopedic Surgery", 
+                                                      "Physical Medicine and Rehabilitation")) +
+  labs(y="Opioid Prescription Rate")
+```
+
+
+<div style="margin-bottom:100px;">
+</div>
+### Opioid Prescriptions by Specialty
+#### Nationally, 2013-2016
+
+The grid below shows the total opioid claims and the prescription rates per year for the top five specialties in terms of prescription rate. Physical Medicine and Rehabilitation is the only specialty prescribed less in 2016 than in 2013.
+```{r specialties_lineplots_b, include=FALSE}
+line_counts_b <- ggplot(top5_specs_year, aes(x=year, y=opioid_claims, color = specialty_description)) +
+  geom_line() +
+  theme_bw() +
+  theme(axis.title.x = element_blank()) +
+  scale_color_discrete(name = "Specialty", breaks = c("Orthopedic Surgery",
+                                                      "Anesthesiology",
+                                                      "Physical Medicine and Rehabilitation", 
+                                                      "Pain Management", 
+                                                      "Interventional Pain Management")) +
+  labs(y="Opioid Claims (Millions)", title="Number of Opioid Claims")
+# line plot of opioid prescription rate by specialty over time
+prescription_rates_b <- ggplot(top5_specs_year, aes(x=year, y=opioid_prescription_rate, color = specialty_description)) +
+  geom_line() +
+  theme_bw() +
+  scale_color_discrete(name = "Specialty", breaks = c("Pain Management",
+                                                      "Anesthesiology",
+                                                      "Interventional Pain Management", 
+                                                      "Orthopedic Surgery", 
+                                                      "Physical Medicine and Rehabilitation")) +
+  labs(x="Year", y="Prescription Rate", title="Opioid Prescription Rate")
+```
+
+```{r specialties_grid_b, echo=FALSE, fig.height=6, fig.width=10, fig.align="center"}
+# plot both "B" plots together
+grid.arrange(line_counts_b, prescription_rates_b, nrow = 2)
+```
+
+## Pareto Analysis
+
+
+
+
+```{r library, include=FALSE}
+library(plyr)
+library(tidyverse)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(stargazer)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(labelled)
+library(readxl)
+```
+
+
+
+```{r q2 data, include=FALSE}
+
+prescriber=read.csv('data\\prescriber-info.csv', stringsAsFactors=FALSE)
+prescriber_list=c(prescriber$NPI)
+
+#######2013##############
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2013.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2013=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2013 <- opioids  %>% 
+  select("NPI","Specialty.Description","NPPES.Provider.State","Opioid.Claim.Count")%>% 
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+names_2013<-c(top_10_opioids_prescriber_2013$NPI)
+
+
+#######2014##############
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2014.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2014=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2014 <- opioids  %>% 
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>%
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+names_2014<-c(top_10_opioids_prescriber_2014$NPI)
+
+
+#######2015##############
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2015.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2015=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2015 <- opioids %>%
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count" ) %>% 
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+
+
+
+names_2015<-c(top_10_opioids_prescriber_2015$NPI)
+
+#######2016##############
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2016.csv', stringsAsFactors=FALSE)
+opioids=subset(opioids, NPI %in% prescriber_list)
+opioids=subset(opioids,Opioid.Claim.Count>1)
+bernes<-opioids %>%
+  dplyr::summarize(Opioids_sum= sum(`Opioid.Claim.Count`,na.rm=TRUE),
+                   Total_claims = sum(`Total.Claim.Count`,na.rm=TRUE)) %>% 
+  mutate(limit = Opioids_sum*0.8)%>%ungroup
+
+opioids$limit<-bernes$limit
+opioids<-arrange(opioids, desc(Opioid.Claim.Count))
+
+
+
+opioids <-opioids%>%mutate(cum_claim = cumsum(`Opioid.Claim.Count`))
+opioids$passed_limit<-0
+opioids$passed_limit[opioids["cum_claim"]>opioids["limit"]]<-1
+
+
+first_index<-min(which(opioids$passed_limit == 1))
+pareto_2016=first_index/nrow(opioids)*100
+
+top_10_opioids_prescriber_2016 <- opioids %>% 
+  select("NPI","Specialty.Description","Opioid.Prescribing.Rate","Opioid.Claim.Count")%>%
+  top_n(n = 20, wt = Opioid.Claim.Count)
+
+names_2016<-c(top_10_opioids_prescriber_2016$NPI)
+
+
+top_dr<-Reduce(intersect, list(names_2013, names_2014,names_2015,names_2016))
+
+
+
+######################tOP PRESCRIBERS###########################
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2016.csv', stringsAsFactors=FALSE)
+
+top_2016<-subset(opioids,NPI  %in% top_dr)
+top_2016 <- top_2016 %>% 
+  mutate(year = 2016) 
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2015.csv', stringsAsFactors=FALSE)
+
+top_2015<-subset(opioids,NPI  %in% top_dr)
+top_2015 <- top_2015 %>% 
+  mutate(year = 2015) 
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2014.csv', stringsAsFactors=FALSE)
+
+top_2014<-subset(opioids,NPI  %in% top_dr)
+top_2014 <- top_2014 %>% 
+  mutate(year = 2014) 
+
+opioids=read.csv('data/Medicare_Part_D_Opioid_Prescriber_Summary_File_2013.csv', stringsAsFactors=FALSE)
+
+top_2013<-subset(opioids,NPI  %in% top_dr)
+top_2013 <- top_2013 %>% 
+  mutate(year = 2013) 
+
+cms_combined <- bind_rows(top_2013,top_2014,top_2015,top_2016)
+
+
+```
+
+
+
+
+
+```{r data model, include=FALSE}
+
+model=read.csv('data/davis.csv', stringsAsFactors=FALSE)
+gdp=read.csv('data/qgdpstate_all_R.csv', stringsAsFactors=FALSE)
+#us_states=read.csv('data/us_states.csv', stringsAsFactors=FALSE)
+
+gdp_long <- melt(gdp, id.vars = c("State", "Region", "ComponentName"))
+gdp_long$year<-as.numeric(str_sub(gdp_long$variable, start= 2))
+#long_combined <- merge(x=long, y=us_states, by.x='State',by.y='States', all.y=TRUE)
+
+model_data <- merge(x=gdp_long, y=model, by.x=c('State',"year"),by.y=c('State',"year"), all.y=TRUE)
+
+model_data<-model_data %>%
+  mutate(gdp_percap=value*1000000/Population)
+
+
+
+
+
+model_data<-model_data %>%
+  mutate(opioid_cost_percap=opioid_cost/Population)
+
+
+
+model_data<-model_data %>%
+  mutate(male_female=male/female)
+
+
+
+
+model_data<-model_data %>%
+  mutate(white_other=white/(black+asian+hispanic+native_indian+other_race))
+
+
+cms_combined_field<- cms_combined %>%filter(year==2013)%>%
+  mutate(id=paste(NPPES.Provider.First.Name,NPPES.Provider.Last.Name,NPPES.Provider.State,Specialty.Description, sep="\n"))%>% 
+  select(NPI,id)
+
+cms_combined <- merge(x=cms_combined, y=cms_combined_field, by.x=c("NPI"),by.y=c("NPI"), all.y=TRUE)
+
+```
+
+
+
+
+
+
+
+
+
+### Q2 Pareto: top 20 percent of the prescribers provide 80% of the opioid in 2013
+
+
+- Top **`r round(pareto_2013, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2013.
+
+- Top **`r round(pareto_2014, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2014.
+
+- Top **`r round(pareto_2015, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2015.
+
+- Top **`r round(pareto_2016, digits = 2)`** percent of the prescribers provide 80% of the opioid in 2016.
+
+
+<div style="margin-bottom:100px;">
+</div>
+
+
+### Prescribers in top 20 for every years between 2013 to 2016
+
+```{r top 20, echo = FALSE, fig.height = 21, fig.width=20,fig.align="center"}
+
+ggplot(cms_combined, aes(x=year,
+                         y=Opioid.Claim.Count)) + 
+  facet_wrap(~ `id`) +
+  geom_col() +
+  xlab("Year") +
+  ylab("Total Opioid claims") +
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=18),strip.text = element_text(size = 20))
+
+```
+
+
+
+```{r regression, echo = FALSE}
+
+fit2 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+average_age, data = model_data)
+
+fit3 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+
+             white_other, data = model_data)
+
+fit4 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+
+             gdp_percap, data = model_data)
+
+fit5 <- lm(Crude.Death.Rate ~ opioid_prescription_rate+average_age+white_other+
+             gdp_percap, data = model_data)
+
+fit6 <- lm(Crude.Death.Rate  ~ opioid_prescription_rate+average_age+white_other+
+             gdp_percap+male_female, data = model_data)
+```
+
+### Regression Outputs
+- Linear regression model use in all models.
+- We could not utilize mixed or fixed effect regression since we only have four years for each state.
+- Dependent variables is always crude death rate.
+
+```{r results1, echo = FALSE}
+
+sjt.lm(fit2,fit3,fit4,
+       remove.spaces = TRUE,
+       show.header = TRUE,
+       show.ci = FALSE,
+       p.numeric = FALSE, 
+       show.se = T,
+       digits.est = 3,
+       CSS = list(css.separatorcol = 'padding-right:3em; padding-left:3em;'),
+       string.est = "Estimate",
+       string.ci = "Conf. Int.",
+       string.p = "p-value",
+       string.dv = "Response",
+       string.pred = "Coefficients",
+       string.interc = "Constant",
+       group.pred = FALSE,
+              pred.labels = c("Opioid Prescription Rate","Average Age", "White Other Race Ratio", "GDP per capita","Male Female Ratio"),
+       depvar.labels = c("Crude Death Rate","Crude Death Rate","Crude Death Rate"))
+
+
+
+```
+
+
+<div style="margin-bottom:100px;">
+</div>
+
+
+```{r results2, echo = FALSE}
+
+sjt.lm(fit5,fit6,
+       remove.spaces = TRUE,
+       show.header = TRUE,
+       show.ci = FALSE,
+       p.numeric = FALSE, 
+       show.se = T,
+       digits.est = 3,
+       CSS = list(css.separatorcol = 'padding-right:3em; padding-left:3em;'),
+       string.est = "Estimate",
+       string.ci = "Conf. Int.",
+       string.p = "p-value",
+       string.dv = "Response",
+       string.pred = "Coefficients",
+       string.interc = "Constant",
+       group.pred = FALSE,
+              pred.labels = c("Opioid Prescription Rate","Average Age", "White Other Race Ratio", "GDP per capita","Male Female Ratio"),
+       depvar.labels = c("Crude Death Rate","Crude Death Rate"))
+
+
+
+```
