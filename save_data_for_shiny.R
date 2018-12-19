@@ -207,7 +207,7 @@ model_data<-model_data %>%
 
 
 cms_combined_field<- cms_combined %>%filter(year==2013)%>%
-  mutate(id=paste(NPPES.Provider.First.Name,NPPES.Provider.Last.Name,NPPES.Provider.State,Specialty.Description, sep="\n"))%>% 
+  mutate(id=paste(NPPES.Provider.First.Name,NPPES.Provider.Last.Name, sep="\n"))%>% 
   select(NPI,id)
 
 cms_combined <- merge(x=cms_combined, y=cms_combined_field, by.x=c("NPI"),by.y=c("NPI"), all.y=TRUE)

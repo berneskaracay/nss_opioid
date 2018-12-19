@@ -24,8 +24,7 @@ shinyServer(function(input, output) {
       xlab("Year") +
       ylab("Total Opioid claims") +
       theme(axis.text=element_text(size=18), axis.title=element_text(size=18),strip.text = element_text(size = 20))
-    
-    
+
   })
   
 })
